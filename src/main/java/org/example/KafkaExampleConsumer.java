@@ -71,8 +71,8 @@ public class KafkaExampleConsumer {
                                     // todo consume
                                     log.info("consume msg {}", record.value());
                                     /**
-                                     * 这里必须按单条消息提交消费位移！！！
-                                     * 以无参 commitSync() 为例，默认提交拉取到的最后一条消息位移
+                                     * 这里必须按单条消息提交消费位移！！！(todo 可以在 poll 批次内优化，但也是精确到某条消息！！！)
+                                     * 注：这里涉及到 API 的具体行为：以无参 commitSync() 为例，默认提交拉取到的最后一条消息位移
                                      */
                                     consumer.commitSync(Collections.singletonMap(rp, new OffsetAndMetadata(record.offset() + 1, null)));
                                 }
