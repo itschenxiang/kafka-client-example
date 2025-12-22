@@ -22,7 +22,7 @@ public class KafkaExampleProducer {
         KafkaProducer<String, String> producer = new KafkaProducer<>(props);
         int MSG_COUNT = 3;
         String topic = "delay_topic";
-        long defaultDelayInSeconds = 0*1000L;
+        long defaultDelayInSeconds = 60*1000L;
         Gson gson = new Gson();
         for (int i=0; i< MSG_COUNT; i++) {
             DelayMessage dm = new DelayMessage();

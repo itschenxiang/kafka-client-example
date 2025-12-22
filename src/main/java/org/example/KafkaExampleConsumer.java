@@ -57,14 +57,23 @@ public class KafkaExampleConsumer {
                                 if (msg.getDeliverTs() > curTs) {
                                     log.info("pause consume partitions {} msg {}", rp, record.value());
                                     pausePartitionMap.put(rp, msg.getDeliverTs());
-                                    // 重置消费位移量
-                                    // consumer.seek(curRecordPartition, record.offset());
+                                    /**
+                                     * 重置消费位移量！！！
+                                     * 注：
+                                     * 1、这里如果不重置，消费者此次生命周期内不会再拉到该消息；
+                                     * 2、即使重启，也可能拉不到，因为后续消息的消费位移提交，会导致该消息“永久丢失”；
+                                     */
+                                    consumer.seek(rp, record.offset());
                                     // pause 对应分区
                                     consumer.pause(List.of(rp));
                                     break;
                                 } else {
                                     // todo consume
                                     log.info("consume msg {}", record.value());
+                                    /**
+                                     * 这里必须按单条消息提交消费位移！！！
+                                     * 以无参 commitSync() 为例，默认提交拉取到的最后一条消息位移
+                                     */
                                     consumer.commitSync(Collections.singletonMap(rp, new OffsetAndMetadata(record.offset() + 1, null)));
                                 }
                             }
@@ -76,7 +85,7 @@ public class KafkaExampleConsumer {
                     log.info("poll empty");
                 }
             } catch (Exception e) {
-                // todo log
+                log.warn("consume error", e);
             }
         }
     }
