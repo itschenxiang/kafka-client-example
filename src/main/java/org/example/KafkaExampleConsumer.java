@@ -36,7 +36,7 @@ public class KafkaExampleConsumer {
                 for (TopicPartition pausePartition : pausePartitionMap.keySet()) {
                     if (pausePartitionMap.get(pausePartition) <= curTs) {
                         log.info("resume consume partitions {}", pausePartition);
-                        consumer.resume(List.of(pausePartition));
+                        consumer.resume(List.of(pausePartition)); // (1)
                     } else {
                         tmpPausePartitionMap.put(pausePartition, pausePartitionMap.get(pausePartition));
                     }
@@ -63,18 +63,17 @@ public class KafkaExampleConsumer {
                                      * 1、这里如果不重置，消费者此次生命周期内不会再拉到该消息；
                                      * 2、即使重启，也可能拉不到，因为后续消息的消费位移提交，会导致该消息“永久丢失”；
                                      */
-                                    consumer.seek(rp, record.offset());
+                                    consumer.seek(rp, record.offset()); // (2)
                                     // pause 对应分区
-                                    consumer.pause(List.of(rp));
+                                    consumer.pause(List.of(rp)); // (3)
                                     break;
                                 } else {
-                                    // todo consume
                                     log.info("consume msg {}", record.value());
                                     /**
                                      * 这里必须按单条消息提交消费位移！！！(todo 可以在 poll 批次内优化，但也是精确到某条消息！！！)
                                      * 注：这里涉及到 API 的具体行为：以无参 commitSync() 为例，默认提交拉取到的最后一条消息位移
                                      */
-                                    consumer.commitSync(Collections.singletonMap(rp, new OffsetAndMetadata(record.offset() + 1, null)));
+                                    consumer.commitSync(Collections.singletonMap(rp, new OffsetAndMetadata(record.offset() + 1, null))); // (4)
                                 }
                             }
                         } else {
